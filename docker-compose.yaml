@@ -1,0 +1,67 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - "8080:8080"
+        env_file:
+            - .env
+        networks:
+            - internal
+        environment:
+            - ENV=development
+        depends_on:
+            migrations:
+                condition: service_completed_successfully
+
+    migrations:
+        image: ghcr.io/kukymbr/goose-docker:3.24.1
+        restart: no
+        env_file:
+            - .env
+        networks:
+            - internal
+        environment:
+            - GOOSE_DRIVER=postgres
+            - GOOSE_DBSTRING=host=postgres port=5432 user=${APP_DB_USER} password=${APP_DB_PASSWORD} dbname=${APP_DB_DATABASE}
+            - GOOSE_VERBOSE=true
+            # Provide the `GOOSE_COMMAND` variable to change the goose command to execute:
+            #- GOOSE_COMMAND=up-to
+            #- GOOSE_COMMAND_ARG=20230607203836
+            # Or a placeholders to set it dynamically from the environment:
+            #- GOOSE_COMMAND=${GOOSE_COMMAND}
+            #- GOOSE_COMMAND_ARG=${GOOSE_COMMAND_ARG}
+        volumes:
+            - ./sql/migrations:/migrations
+        depends_on:
+            postgres:
+                condition: service_healthy
+
+    postgres:
+        image: postgres:17.2-alpine
+        container_name: postgres
+        networks:
+            - internal
+        environment:
+            POSTGRES_DB: ${APP_DB_DATABASE}
+            POSTGRES_USER: ${APP_DB_USER}
+            POSTGRES_PASSWORD: ${APP_DB_PASSWORD}
+        volumes:
+            - pg-data:/var/lib/postgresql/data
+        ports:
+            - ${APP_DB_PORT}:5432
+        env_file:
+            - .env
+        healthcheck:
+            test: [ "CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'" ]
+            interval: 10s
+            timeout: 1s
+            retries: 5
+
+volumes:
+    pg-data:
+
+networks:
+    internal:
+        driver: bridge
