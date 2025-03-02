@@ -4,6 +4,8 @@ LOCAL_BIN:=$(CURDIR)/bin
 
 ENV_DIR = .env
 
+name = kanban_scheme
+
 .PHONY: help
 
 help:
