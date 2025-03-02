@@ -14,6 +14,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/config"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/handler"
 	"github.com/shatilovlex/kanban_backend_go/pkg/pgconnect"
 )
 
@@ -54,6 +55,8 @@ func (a *App) Start() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/index.html")
 	})
+
+	mux.HandleFunc("POST /project/create", handler.NewCreateProjectHandler(a.ctx, a.db).Handle)
 
 	addr := fmt.Sprintf("%v:%v", *ip, *port)
 	server := &http.Server{
