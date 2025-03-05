@@ -6,8 +6,8 @@ create table if not exists kanban.project
     id       uuid primary key,
     name     varchar(255),
     description varchar(255),
-    archived bool  default false
-);
+    archived bool default false not null
+    );
 -- +goose StatementEnd
 
 -- +goose Down

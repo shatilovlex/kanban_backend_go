@@ -11,6 +11,20 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const ProjectArchive = `-- name: ProjectArchive :exec
+UPDATE pg_storage.kanban.project SET archived=$2 WHERE id=$1
+`
+
+type ProjectArchiveParams struct {
+	ID       pgtype.UUID `db:"id" json:"id"`
+	Archived bool        `db:"archived" json:"archived"`
+}
+
+func (q *Queries) ProjectArchive(ctx context.Context, arg ProjectArchiveParams) error {
+	_, err := q.db.Exec(ctx, ProjectArchive, arg.ID, arg.Archived)
+	return err
+}
+
 const ProjectCreate = `-- name: ProjectCreate :exec
 INSERT INTO pg_storage.kanban.project (id, name, description)
 VALUES ($1, $2, $3)

@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	ProjectArchive(ctx context.Context, arg ProjectArchiveParams) error
 	ProjectCreate(ctx context.Context, arg ProjectCreateParams) error
 }
 

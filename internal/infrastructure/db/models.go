@@ -12,5 +12,5 @@ type KanbanProject struct {
 	ID          pgtype.UUID `db:"id" json:"id"`
 	Name        *string     `db:"name" json:"name"`
 	Description *string     `db:"description" json:"description"`
-	Archived    *bool       `db:"archived" json:"archived"`
+	Archived    bool        `db:"archived" json:"archived"`
 }

@@ -13,8 +13,8 @@ import (
 )
 
 type ProjectRequestParams struct {
-	Name        string
-	Description string
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type CreateProjectHandler struct {
@@ -41,10 +41,16 @@ func (h *CreateProjectHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !isValidParams(&projectRequestParams) {
+		log.Println("Invalid param:", err)
+		http.Error(w, "Invalid param body", http.StatusBadRequest)
+		return
+	}
+
 	err = id.Scan(uuid.New().String())
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
-		log.Printf("Error create user: %v", err)
+		http.Error(w, "Failed to create project", http.StatusInternalServerError)
+		log.Printf("Error create project: %v", err)
 		return
 	}
 
@@ -63,8 +69,20 @@ func (h *CreateProjectHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(w).Encode(id)
 	if err != nil {
-		log.Println("Error encoding user response:", err)
+		log.Println("Error encoding response:", err)
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
+}
+
+func isValidParams(params *ProjectRequestParams) bool {
+	if params.Name == "" {
+		return false
+	}
+
+	if params.Description == "" {
+		return false
+	}
+
+	return true
 }
