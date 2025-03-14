@@ -40,3 +40,33 @@ func (q *Queries) ProjectCreate(ctx context.Context, arg ProjectCreateParams) er
 	_, err := q.db.Exec(ctx, ProjectCreate, arg.ID, arg.Name, arg.Description)
 	return err
 }
+
+const ProjectList = `-- name: ProjectList :many
+SELECT id, name, description FROM pg_storage.kanban.project WHERE archived IS FALSE
+`
+
+type ProjectListRow struct {
+	ID          pgtype.UUID `db:"id" json:"id"`
+	Name        *string     `db:"name" json:"name"`
+	Description *string     `db:"description" json:"description"`
+}
+
+func (q *Queries) ProjectList(ctx context.Context) ([]*ProjectListRow, error) {
+	rows, err := q.db.Query(ctx, ProjectList)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*ProjectListRow{}
+	for rows.Next() {
+		var i ProjectListRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Description); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
