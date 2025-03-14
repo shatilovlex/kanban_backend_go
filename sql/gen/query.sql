@@ -4,3 +4,6 @@ VALUES ($1, $2, $3);
 
 -- name: ProjectArchive :exec
 UPDATE pg_storage.kanban.project SET archived=$2 WHERE id=$1;
+
+-- name: ProjectList :many
+SELECT id, name, description FROM pg_storage.kanban.project WHERE archived IS FALSE;

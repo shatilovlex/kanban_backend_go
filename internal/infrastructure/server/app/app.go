@@ -58,6 +58,7 @@ func (a *App) Start() {
 
 	mux.HandleFunc("POST /project/create", handler.NewCreateProjectHandler(a.ctx, a.db).Handle)
 	mux.HandleFunc("POST /project/archive", handler.NewArchiveProjectHandler(a.ctx, a.db).Handle)
+	mux.HandleFunc("GET /projects", handler.NewProjectListHandler(a.ctx, a.db).Handle)
 
 	addr := fmt.Sprintf("%v:%v", *ip, *port)
 	server := &http.Server{
