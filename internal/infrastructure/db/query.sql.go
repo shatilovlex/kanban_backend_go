@@ -11,6 +11,35 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const Board = `-- name: Board :many
+SELECT id, name FROM pg_storage.kanban.list WHERE project_id=$1
+`
+
+type BoardRow struct {
+	ID   pgtype.UUID `db:"id" json:"id"`
+	Name *string     `db:"name" json:"name"`
+}
+
+func (q *Queries) Board(ctx context.Context, projectID pgtype.UUID) ([]*BoardRow, error) {
+	rows, err := q.db.Query(ctx, Board, projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*BoardRow{}
+	for rows.Next() {
+		var i BoardRow
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const ProjectArchive = `-- name: ProjectArchive :exec
 UPDATE pg_storage.kanban.project SET archived=$2 WHERE id=$1
 `

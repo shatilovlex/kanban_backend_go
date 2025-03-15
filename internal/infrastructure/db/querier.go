@@ -6,9 +6,12 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
+	Board(ctx context.Context, projectID pgtype.UUID) ([]*BoardRow, error)
 	ProjectArchive(ctx context.Context, arg ProjectArchiveParams) error
 	ProjectCreate(ctx context.Context, arg ProjectCreateParams) error
 	ProjectList(ctx context.Context) ([]*ProjectListRow, error)

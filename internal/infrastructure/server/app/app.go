@@ -52,13 +52,10 @@ func (a *App) Start() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/index.html")
-	})
-
 	mux.HandleFunc("POST /project/create", handler.NewCreateProjectHandler(a.ctx, a.db).Handle)
 	mux.HandleFunc("POST /project/archive", handler.NewArchiveProjectHandler(a.ctx, a.db).Handle)
-	mux.HandleFunc("GET /projects", handler.NewProjectListHandler(a.ctx, a.db).Handle)
+	mux.HandleFunc("GET /v1/projects", handler.NewProjectListHandler(a.ctx, a.db).Handle)
+	mux.HandleFunc("GET /v1/board", handler.NewBoardHandler(a.ctx, a.db).Handle)
 
 	addr := fmt.Sprintf("%v:%v", *ip, *port)
 	server := &http.Server{
