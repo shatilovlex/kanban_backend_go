@@ -1,15 +1,14 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/db"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/myHandler"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/statusError"
 )
 
 type ProjectRequestParams struct {
@@ -18,61 +17,50 @@ type ProjectRequestParams struct {
 }
 
 type CreateProjectHandler struct {
-	ctx     context.Context
-	querier db.Querier
+	appHandler *myHandler.MyHandler
 }
 
-func NewCreateProjectHandler(ctx context.Context, connect *pgxpool.Pool) *CreateProjectHandler {
-	querier := db.New(connect)
-	return &CreateProjectHandler{ctx: ctx, querier: querier}
+func NewCreateProjectHandler(appHandler *myHandler.MyHandler) *CreateProjectHandler {
+	return &CreateProjectHandler{appHandler}
 }
 
-func (h *CreateProjectHandler) GetQuerier() db.Querier {
-	return h.querier
+func (h *CreateProjectHandler) GetPattern() string {
+	return "POST /project/create"
 }
 
-func (h *CreateProjectHandler) Handle(w http.ResponseWriter, r *http.Request) {
+func (h *CreateProjectHandler) Handle(w http.ResponseWriter, r *http.Request) error {
 	var id pgtype.UUID
 	projectRequestParams := ProjectRequestParams{}
 	err := json.NewDecoder(r.Body).Decode(&projectRequestParams)
 	if err != nil {
-		log.Println("Error decoding JSON:", err)
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusBadRequest)
 	}
 
 	if !isValidParams(&projectRequestParams) {
-		log.Println("Invalid param:", err)
-		http.Error(w, "Invalid param body", http.StatusBadRequest)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusBadRequest)
 	}
 
 	err = id.Scan(uuid.New().String())
 	if err != nil {
-		http.Error(w, "Failed to create project", http.StatusInternalServerError)
-		log.Printf("Error create project: %v", err)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 
-	err = h.GetQuerier().ProjectCreate(h.ctx, db.ProjectCreateParams{
+	err = h.appHandler.GetQuerier().ProjectCreate(h.appHandler.Context(), db.ProjectCreateParams{
 		ID:          id,
 		Name:        &projectRequestParams.Name,
 		Description: &projectRequestParams.Description,
 	})
 	if err != nil {
-		http.Error(w, "Failed to create project", http.StatusInternalServerError)
-		log.Printf("Error create project: %v", err)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(w).Encode(id)
 	if err != nil {
-		log.Println("Error encoding response:", err)
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
+	return nil
 }
 
 func isValidParams(params *ProjectRequestParams) bool {

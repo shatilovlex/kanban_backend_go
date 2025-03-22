@@ -1,52 +1,44 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
-	"log"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/statusError"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/db"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/myHandler"
 )
 
 type BoardHandler struct {
-	ctx     context.Context
-	querier db.Querier
+	appHandler *myHandler.MyHandler
 }
 
-func NewBoardHandler(ctx context.Context, connect *pgxpool.Pool) *BoardHandler {
-	querier := db.New(connect)
-	return &BoardHandler{ctx: ctx, querier: querier}
+func NewBoardHandler(appHandler *myHandler.MyHandler) *BoardHandler {
+	return &BoardHandler{appHandler}
 }
 
-func (h *BoardHandler) GetQuerier() db.Querier {
-	return h.querier
+func (h *BoardHandler) GetPattern() string {
+	return "GET /v1/board"
 }
 
-func (h *BoardHandler) Handle(w http.ResponseWriter, r *http.Request) {
+func (h *BoardHandler) Handle(w http.ResponseWriter, r *http.Request) error {
 	var res []*db.BoardRow
 	projectID := pgtype.UUID{}
 	err := projectID.Scan(r.URL.Query().Get("project_id"))
 	if err != nil {
-		http.Error(w, "Invalid project_id", http.StatusBadRequest)
-		log.Printf("Error get project_id: %v", err)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusBadRequest)
 	}
-	res, err = h.GetQuerier().Board(h.ctx, projectID)
+	res, err = h.appHandler.GetQuerier().Board(h.appHandler.Context(), projectID)
 	if err != nil {
-		http.Error(w, "Failed change status project", http.StatusInternalServerError)
-		log.Printf("Error change status project: %v", err)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusBadRequest)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		log.Println("Error encoding response:", err)
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusBadRequest)
 	}
+	return nil
 }

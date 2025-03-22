@@ -12,9 +12,13 @@ import (
 
 type Querier interface {
 	Board(ctx context.Context, projectID pgtype.UUID) ([]*BoardRow, error)
+	ListAdd(ctx context.Context, arg ListAddParams) error
+	ListRemove(ctx context.Context, id pgtype.UUID) error
 	ProjectArchive(ctx context.Context, arg ProjectArchiveParams) error
 	ProjectCreate(ctx context.Context, arg ProjectCreateParams) error
 	ProjectList(ctx context.Context) ([]*ProjectListRow, error)
+	RenameList(ctx context.Context, arg RenameListParams) error
+	SaveListOrder(ctx context.Context, arg SaveListOrderParams) error
 }
 
 var _ Querier = (*Queries)(nil)

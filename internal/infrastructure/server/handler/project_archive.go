@@ -1,43 +1,37 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/db"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/myHandler"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/statusError"
 )
 
 type ArchiveProjectHandler struct {
-	ctx     context.Context
-	querier db.Querier
+	appHandler *myHandler.MyHandler
 }
 
-func NewArchiveProjectHandler(ctx context.Context, connect *pgxpool.Pool) *ArchiveProjectHandler {
-	querier := db.New(connect)
-	return &ArchiveProjectHandler{ctx: ctx, querier: querier}
+func NewArchiveProjectHandler(appHandler *myHandler.MyHandler) *ArchiveProjectHandler {
+	return &ArchiveProjectHandler{appHandler}
 }
 
-func (h *ArchiveProjectHandler) GetQuerier() db.Querier {
-	return h.querier
+func (h *ArchiveProjectHandler) GetPattern() string {
+	return "POST /project/archive"
 }
 
-func (h *ArchiveProjectHandler) Handle(w http.ResponseWriter, r *http.Request) {
+func (h *ArchiveProjectHandler) Handle(w http.ResponseWriter, r *http.Request) error {
 	var projectRequestParams db.ProjectArchiveParams
 	err := json.NewDecoder(r.Body).Decode(&projectRequestParams)
 	if err != nil {
-		log.Println("Error decoding JSON:", err)
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusBadRequest)
 	}
 
-	err = h.GetQuerier().ProjectArchive(h.ctx, projectRequestParams)
+	err = h.appHandler.GetQuerier().ProjectArchive(h.appHandler.Context(), projectRequestParams)
 	if err != nil {
-		http.Error(w, "Failed change status project", http.StatusInternalServerError)
-		log.Printf("Error change status project: %v", err)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -45,8 +39,7 @@ func (h *ArchiveProjectHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(projectRequestParams.ID)
 	log.Println(projectRequestParams)
 	if err != nil {
-		log.Println("Error encoding response:", err)
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
+	return nil
 }

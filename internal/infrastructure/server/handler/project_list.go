@@ -1,43 +1,36 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/db"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/myHandler"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/statusError"
 )
 
 type ProjectListHandler struct {
-	ctx     context.Context
-	querier db.Querier
+	appHandler *myHandler.MyHandler
 }
 
-func NewProjectListHandler(ctx context.Context, connect *pgxpool.Pool) *ProjectListHandler {
-	querier := db.New(connect)
-	return &ProjectListHandler{ctx: ctx, querier: querier}
+func NewProjectListHandler(appHandler *myHandler.MyHandler) *ProjectListHandler {
+	return &ProjectListHandler{appHandler}
 }
 
-func (h *ProjectListHandler) GetQuerier() db.Querier {
-	return h.querier
+func (h *ProjectListHandler) GetPattern() string {
+	return "GET /v1/projects"
 }
 
-func (h *ProjectListHandler) Handle(w http.ResponseWriter, _ *http.Request) {
-	res, err := h.GetQuerier().ProjectList(h.ctx)
+func (h *ProjectListHandler) Handle(w http.ResponseWriter, _ *http.Request) error {
+	res, err := h.appHandler.GetQuerier().ProjectList(h.appHandler.Context())
 	if err != nil {
-		http.Error(w, "Failed change status project", http.StatusInternalServerError)
-		log.Printf("Error change status project: %v", err)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		log.Println("Error encoding response:", err)
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
+		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
+	return nil
 }
