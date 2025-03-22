@@ -68,7 +68,7 @@ func (a *App) Start() {
 		list.NewSaveOrderHandler(appHandler),
 		list.NewRenameListHandler(appHandler),
 
-		board.NewBoardHandler(appHandler),
+		board.NewGetBoardHandler(appHandler),
 	}
 
 	maker := muxmaker.NewMakerAppMux(listHandlers)

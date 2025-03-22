@@ -5,12 +5,15 @@ import (
 	"net/http"
 
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/apperror"
-	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler"
 )
+
+type AppHandlerInterface interface {
+	Handle(w http.ResponseWriter, r *http.Request) error
+}
 
 type MuxHandlerInterface interface {
 	GetPattern() string
-	handler.MyHandlerInterface
+	AppHandlerInterface
 }
 
 type MakerAppMux struct {
@@ -27,7 +30,7 @@ func (m *MakerAppMux) MakeHandlers(mux *http.ServeMux) {
 	}
 }
 
-func (m *MakerAppMux) CustomHandler(f handler.MyHandlerInterface) http.Handler {
+func (m *MakerAppMux) CustomHandler(f AppHandlerInterface) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		err := f.Handle(w, r)
 		if err != nil {

@@ -10,10 +10,10 @@ import (
 )
 
 type RenameListHandler struct {
-	appHandler *handler.MyHandler
+	appHandler *handler.Handler
 }
 
-func NewRenameListHandler(appHandler *handler.MyHandler) *RenameListHandler {
+func NewRenameListHandler(appHandler *handler.Handler) *RenameListHandler {
 	return &RenameListHandler{appHandler}
 }
 

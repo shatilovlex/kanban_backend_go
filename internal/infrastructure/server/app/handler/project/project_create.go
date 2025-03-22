@@ -13,10 +13,10 @@ import (
 )
 
 type CreateProjectHandler struct {
-	appHandler *handler.MyHandler
+	appHandler *handler.Handler
 }
 
-func NewCreateProjectHandler(appHandler *handler.MyHandler) *CreateProjectHandler {
+func NewCreateProjectHandler(appHandler *handler.Handler) *CreateProjectHandler {
 	return &CreateProjectHandler{appHandler}
 }
 

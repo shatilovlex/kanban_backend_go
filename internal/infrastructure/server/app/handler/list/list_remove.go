@@ -14,10 +14,10 @@ type RemoveListRequestParams struct {
 }
 
 type RemoveListHandler struct {
-	appHandler *handler.MyHandler
+	appHandler *handler.Handler
 }
 
-func NewRemoveListHandler(appHandler *handler.MyHandler) *RemoveListHandler {
+func NewRemoveListHandler(appHandler *handler.Handler) *RemoveListHandler {
 	return &RemoveListHandler{appHandler}
 }
 

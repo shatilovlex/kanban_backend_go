@@ -13,10 +13,10 @@ import (
 )
 
 type CreateListHandler struct {
-	appHandler *handler.MyHandler
+	appHandler *handler.Handler
 }
 
-func NewCreateListHandler(appHandler *handler.MyHandler) *CreateListHandler {
+func NewCreateListHandler(appHandler *handler.Handler) *CreateListHandler {
 	return &CreateListHandler{appHandler}
 }
 

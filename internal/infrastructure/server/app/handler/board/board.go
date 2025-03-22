@@ -11,10 +11,10 @@ import (
 )
 
 type GetBoardHandler struct {
-	appHandler *handler.MyHandler
+	appHandler *handler.Handler
 }
 
-func NewBoardHandler(appHandler *handler.MyHandler) *GetBoardHandler {
+func NewGetBoardHandler(appHandler *handler.Handler) *GetBoardHandler {
 	return &GetBoardHandler{appHandler}
 }
 

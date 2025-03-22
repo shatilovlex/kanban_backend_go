@@ -12,10 +12,10 @@ import (
 )
 
 type SaveOrderHandler struct {
-	appHandler *handler.MyHandler
+	appHandler *handler.Handler
 }
 
-func NewSaveOrderHandler(appHandler *handler.MyHandler) *SaveOrderHandler {
+func NewSaveOrderHandler(appHandler *handler.Handler) *SaveOrderHandler {
 	return &SaveOrderHandler{appHandler}
 }
 

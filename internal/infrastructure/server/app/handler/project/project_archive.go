@@ -11,10 +11,10 @@ import (
 )
 
 type ArchiveProjectHandler struct {
-	appHandler *handler.MyHandler
+	appHandler *handler.Handler
 }
 
-func NewArchiveProjectHandler(appHandler *handler.MyHandler) *ArchiveProjectHandler {
+func NewArchiveProjectHandler(appHandler *handler.Handler) *ArchiveProjectHandler {
 	return &ArchiveProjectHandler{appHandler}
 }
 
