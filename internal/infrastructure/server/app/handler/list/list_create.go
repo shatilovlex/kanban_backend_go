@@ -1,23 +1,22 @@
-package handler
+package list
 
 import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-playground/validator"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/db"
-	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/myHandler"
-	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/statusError"
-	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/request"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/apperror"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/request/list"
 )
 
 type CreateListHandler struct {
-	appHandler *myHandler.MyHandler
+	appHandler *handler.MyHandler
 }
 
-func NewCreateListHandler(appHandler *myHandler.MyHandler) *CreateListHandler {
+func NewCreateListHandler(appHandler *handler.MyHandler) *CreateListHandler {
 	return &CreateListHandler{appHandler}
 }
 
@@ -26,22 +25,20 @@ func (h *CreateListHandler) GetPattern() string {
 }
 
 func (h *CreateListHandler) Handle(w http.ResponseWriter, r *http.Request) error {
-	validate := validator.New()
 	var id pgtype.UUID
-	listRequestParams := request.ListRequestParams{}
+	listRequestParams := list.CreateListRequestParams{}
 	err := json.NewDecoder(r.Body).Decode(&listRequestParams)
 	if err != nil {
-		return statusError.WithHTTPStatus(err, http.StatusBadRequest)
-
+		return apperror.WithHTTPStatus(err, http.StatusBadRequest)
 	}
-	err = validate.StructCtx(h.appHandler.Context(), &listRequestParams)
+	err = h.appHandler.Validator().Validate(&listRequestParams)
 	if err != nil {
-		return statusError.WithHTTPStatus(err, http.StatusBadRequest)
+		return apperror.WithHTTPStatus(err, http.StatusBadRequest)
 	}
 
 	err = id.Scan(uuid.New().String())
 	if err != nil {
-		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
+		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 
 	listAddParams := db.ListAddParams{
@@ -52,14 +49,14 @@ func (h *CreateListHandler) Handle(w http.ResponseWriter, r *http.Request) error
 	}
 	err = h.appHandler.GetQuerier().ListAdd(h.appHandler.Context(), listAddParams)
 	if err != nil {
-		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
+		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(w).Encode(listAddParams)
 	if err != nil {
-		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
+		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 	return nil
 }

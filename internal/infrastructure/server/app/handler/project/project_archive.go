@@ -1,4 +1,4 @@
-package handler
+package project
 
 import (
 	"encoding/json"
@@ -6,15 +6,15 @@ import (
 	"net/http"
 
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/db"
-	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/myHandler"
-	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/statusError"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/apperror"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler"
 )
 
 type ArchiveProjectHandler struct {
-	appHandler *myHandler.MyHandler
+	appHandler *handler.MyHandler
 }
 
-func NewArchiveProjectHandler(appHandler *myHandler.MyHandler) *ArchiveProjectHandler {
+func NewArchiveProjectHandler(appHandler *handler.MyHandler) *ArchiveProjectHandler {
 	return &ArchiveProjectHandler{appHandler}
 }
 
@@ -26,12 +26,12 @@ func (h *ArchiveProjectHandler) Handle(w http.ResponseWriter, r *http.Request) e
 	var projectRequestParams db.ProjectArchiveParams
 	err := json.NewDecoder(r.Body).Decode(&projectRequestParams)
 	if err != nil {
-		return statusError.WithHTTPStatus(err, http.StatusBadRequest)
+		return apperror.WithHTTPStatus(err, http.StatusBadRequest)
 	}
 
 	err = h.appHandler.GetQuerier().ProjectArchive(h.appHandler.Context(), projectRequestParams)
 	if err != nil {
-		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
+		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -39,7 +39,7 @@ func (h *ArchiveProjectHandler) Handle(w http.ResponseWriter, r *http.Request) e
 	err = json.NewEncoder(w).Encode(projectRequestParams.ID)
 	log.Println(projectRequestParams)
 	if err != nil {
-		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
+		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 	return nil
 }

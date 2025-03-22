@@ -1,4 +1,4 @@
-package handler
+package list
 
 import (
 	"encoding/json"
@@ -7,15 +7,15 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/db"
-	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/myHandler"
-	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/statusError"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/apperror"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler"
 )
 
 type SaveOrderHandler struct {
-	appHandler *myHandler.MyHandler
+	appHandler *handler.MyHandler
 }
 
-func NewSaveOrderHandler(appHandler *myHandler.MyHandler) *SaveOrderHandler {
+func NewSaveOrderHandler(appHandler *handler.MyHandler) *SaveOrderHandler {
 	return &SaveOrderHandler{appHandler}
 }
 
@@ -24,10 +24,9 @@ func (h *SaveOrderHandler) GetPattern() string {
 }
 
 func (h *SaveOrderHandler) Handle(w http.ResponseWriter, r *http.Request) error {
-
 	tx, err := h.appHandler.Connect().BeginTx(h.appHandler.Context(), pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
 	if err != nil {
-		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
+		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 	defer tx.Rollback(h.appHandler.Context())
 
@@ -36,28 +35,29 @@ func (h *SaveOrderHandler) Handle(w http.ResponseWriter, r *http.Request) error 
 	var board []*db.BoardRow
 	err = json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		return statusError.WithHTTPStatus(err, http.StatusBadRequest)
+		return apperror.WithHTTPStatus(err, http.StatusBadRequest)
 	}
 	for _, param := range params {
 		err = h.appHandler.GetQuerier().SaveListOrder(h.appHandler.Context(), param)
 		projectID = param.ProjectID
 		if err != nil {
-			return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
+			return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
 		}
 	}
 
 	err = tx.Commit(h.appHandler.Context())
-
-	board, err = h.appHandler.GetQuerier().Board(h.appHandler.Context(), projectID)
-
 	if err != nil {
-		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
+		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
+	}
+	board, err = h.appHandler.GetQuerier().Board(h.appHandler.Context(), projectID)
+	if err != nil {
+		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(board)
 	if err != nil {
-		return statusError.WithHTTPStatus(err, http.StatusInternalServerError)
+		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 	return nil
 }
