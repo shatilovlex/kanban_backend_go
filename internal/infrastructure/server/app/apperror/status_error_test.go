@@ -13,8 +13,8 @@ func TestHTTPStatus(t *testing.T) {
 		err error
 	}
 	tests := []struct {
-		name string
 		args args
+		name string
 		want int
 	}{
 		{

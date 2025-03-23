@@ -13,10 +13,10 @@ import (
 )
 
 type CreateListHandler struct {
-	appHandler *handler.Handler
+	appHandler handler.AppHandlerInterface
 }
 
-func NewCreateListHandler(appHandler *handler.Handler) *CreateListHandler {
+func NewCreateListHandler(appHandler handler.AppHandlerInterface) *CreateListHandler {
 	return &CreateListHandler{appHandler}
 }
 
@@ -54,9 +54,5 @@ func (h *CreateListHandler) Handle(w http.ResponseWriter, r *http.Request) error
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	err = json.NewEncoder(w).Encode(listAddParams)
-	if err != nil {
-		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
-	}
 	return nil
 }

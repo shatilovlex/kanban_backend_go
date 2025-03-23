@@ -8,17 +8,22 @@ import (
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/appvalidator"
 )
 
-type Handler struct {
-	ctx       context.Context
-	connect   *pgxpool.Pool
-	querier   db.Querier
-	validator *appvalidator.AppValidator
+type AppHandlerInterface interface {
+	GetQuerier() db.Querier
+	Connect() *pgxpool.Pool
+	Context() context.Context
+	Validator() *appvalidator.AppValidator
 }
 
-func NewMyHandler(ctx context.Context, connect *pgxpool.Pool) *Handler {
+type Handler struct {
+	ctx     context.Context
+	connect *pgxpool.Pool
+	querier db.Querier
+}
+
+func NewAppHandler(ctx context.Context, connect *pgxpool.Pool) *Handler {
 	querier := db.New(connect)
-	validator := appvalidator.NewAppValidator()
-	return &Handler{ctx: ctx, connect: connect, querier: querier, validator: validator}
+	return &Handler{ctx: ctx, connect: connect, querier: querier}
 }
 
 func (h *Handler) GetQuerier() db.Querier {
@@ -34,5 +39,5 @@ func (h *Handler) Context() context.Context {
 }
 
 func (h *Handler) Validator() *appvalidator.AppValidator {
-	return h.validator
+	return appvalidator.NewAppValidator()
 }

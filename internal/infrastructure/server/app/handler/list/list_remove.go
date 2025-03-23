@@ -4,20 +4,16 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/apperror"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/request/list"
 )
 
-type RemoveListRequestParams struct {
-	ID pgtype.UUID `json:"id"`
-}
-
 type RemoveListHandler struct {
-	appHandler *handler.Handler
+	appHandler handler.AppHandlerInterface
 }
 
-func NewRemoveListHandler(appHandler *handler.Handler) *RemoveListHandler {
+func NewRemoveListHandler(appHandler handler.AppHandlerInterface) *RemoveListHandler {
 	return &RemoveListHandler{appHandler}
 }
 
@@ -26,8 +22,13 @@ func (h *RemoveListHandler) GetPattern() string {
 }
 
 func (h *RemoveListHandler) Handle(w http.ResponseWriter, r *http.Request) error {
-	params := RemoveListRequestParams{}
+	params := list.RemoveListRequestParams{}
 	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		return apperror.WithHTTPStatus(err, http.StatusBadRequest)
+	}
+
+	err = h.appHandler.Validator().Validate(&params)
 	if err != nil {
 		return apperror.WithHTTPStatus(err, http.StatusBadRequest)
 	}

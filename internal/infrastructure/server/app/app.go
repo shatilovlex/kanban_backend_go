@@ -54,7 +54,7 @@ func (a *App) Start() {
 	port := flag.String("port", a.config.HTTP.Port, "Port number")
 	flag.Parse()
 
-	appHandler := handler.NewMyHandler(a.ctx, a.db)
+	appHandler := handler.NewAppHandler(a.ctx, a.db)
 
 	mux := http.NewServeMux()
 

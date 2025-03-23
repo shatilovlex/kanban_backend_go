@@ -7,13 +7,14 @@ import (
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/db"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/apperror"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/request/list"
 )
 
 type RenameListHandler struct {
-	appHandler *handler.Handler
+	appHandler handler.AppHandlerInterface
 }
 
-func NewRenameListHandler(appHandler *handler.Handler) *RenameListHandler {
+func NewRenameListHandler(appHandler handler.AppHandlerInterface) *RenameListHandler {
 	return &RenameListHandler{appHandler}
 }
 
@@ -22,14 +23,20 @@ func (h *RenameListHandler) GetPattern() string {
 }
 
 func (h *RenameListHandler) Handle(w http.ResponseWriter, r *http.Request) error {
-	renameListParams := db.RenameListParams{}
-	err := json.NewDecoder(r.Body).Decode(&renameListParams)
+	renameListRequestParams := list.RenameListRequestParams{}
+	err := json.NewDecoder(r.Body).Decode(&renameListRequestParams)
 	if err != nil {
 		return apperror.WithHTTPStatus(err, http.StatusBadRequest)
 	}
 
-	if !h.isValidParams(&renameListParams) {
+	err = h.appHandler.Validator().Validate(&renameListRequestParams)
+	if err != nil {
 		return apperror.WithHTTPStatus(err, http.StatusBadRequest)
+	}
+
+	renameListParams := db.RenameListParams{
+		ID:   renameListRequestParams.ID,
+		Name: &renameListRequestParams.Name,
 	}
 
 	err = h.appHandler.GetQuerier().RenameList(h.appHandler.Context(), renameListParams)
@@ -39,13 +46,5 @@ func (h *RenameListHandler) Handle(w http.ResponseWriter, r *http.Request) error
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(renameListParams)
-	if err != nil {
-		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
-	}
 	return nil
-}
-
-func (h *RenameListHandler) isValidParams(_ *db.RenameListParams) bool {
-	return true
 }
