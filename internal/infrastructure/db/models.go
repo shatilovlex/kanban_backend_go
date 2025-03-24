@@ -8,6 +8,13 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type KanbanList struct {
+	ID        pgtype.UUID `db:"id" json:"id"`
+	ProjectID pgtype.UUID `db:"project_id" json:"project_id"`
+	Name      *string     `db:"name" json:"name"`
+	Sort      *int32      `db:"sort" json:"sort"`
+}
+
 type KanbanProject struct {
 	ID          pgtype.UUID `db:"id" json:"id"`
 	Name        *string     `db:"name" json:"name"`

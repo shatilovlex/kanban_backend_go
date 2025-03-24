@@ -14,7 +14,11 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/config"
-	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/handler"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler/board"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler/list"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler/project"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/muxmaker"
 	"github.com/shatilovlex/kanban_backend_go/pkg/pgconnect"
 )
 
@@ -50,15 +54,25 @@ func (a *App) Start() {
 	port := flag.String("port", a.config.HTTP.Port, "Port number")
 	flag.Parse()
 
+	appHandler := handler.NewAppHandler(a.ctx, a.db)
+
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/index.html")
-	})
+	listHandlers := []muxmaker.MuxHandlerInterface{
+		project.NewProjectListHandler(appHandler),
+		project.NewCreateProjectHandler(appHandler),
+		project.NewArchiveProjectHandler(appHandler),
 
-	mux.HandleFunc("POST /project/create", handler.NewCreateProjectHandler(a.ctx, a.db).Handle)
-	mux.HandleFunc("POST /project/archive", handler.NewArchiveProjectHandler(a.ctx, a.db).Handle)
-	mux.HandleFunc("GET /projects", handler.NewProjectListHandler(a.ctx, a.db).Handle)
+		list.NewCreateListHandler(appHandler),
+		list.NewRemoveListHandler(appHandler),
+		list.NewSaveOrderHandler(appHandler),
+		list.NewRenameListHandler(appHandler),
+
+		board.NewGetBoardHandler(appHandler),
+	}
+
+	maker := muxmaker.NewMakerAppMux(listHandlers)
+	maker.MakeHandlers(mux)
 
 	addr := fmt.Sprintf("%v:%v", *ip, *port)
 	server := &http.Server{

@@ -11,8 +11,74 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const Board = `-- name: Board :many
+SELECT id, name, project_id, sort FROM kanban.list WHERE project_id=$1
+`
+
+type BoardRow struct {
+	ID        pgtype.UUID `db:"id" json:"id"`
+	Name      *string     `db:"name" json:"name"`
+	ProjectID pgtype.UUID `db:"project_id" json:"project_id"`
+	Sort      *int32      `db:"sort" json:"sort"`
+}
+
+func (q *Queries) Board(ctx context.Context, projectID pgtype.UUID) ([]*BoardRow, error) {
+	rows, err := q.db.Query(ctx, Board, projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*BoardRow{}
+	for rows.Next() {
+		var i BoardRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ProjectID,
+			&i.Sort,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const ListAdd = `-- name: ListAdd :exec
+INSERT INTO kanban.list (id, project_id, name, sort) VALUES ($1, $2, $3, $4)
+`
+
+type ListAddParams struct {
+	ID        pgtype.UUID `db:"id" json:"id"`
+	ProjectID pgtype.UUID `db:"project_id" json:"project_id"`
+	Name      *string     `db:"name" json:"name"`
+	Sort      *int32      `db:"sort" json:"sort"`
+}
+
+func (q *Queries) ListAdd(ctx context.Context, arg ListAddParams) error {
+	_, err := q.db.Exec(ctx, ListAdd,
+		arg.ID,
+		arg.ProjectID,
+		arg.Name,
+		arg.Sort,
+	)
+	return err
+}
+
+const ListRemove = `-- name: ListRemove :exec
+DELETE FROM kanban.list WHERE id=$1
+`
+
+func (q *Queries) ListRemove(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, ListRemove, id)
+	return err
+}
+
 const ProjectArchive = `-- name: ProjectArchive :exec
-UPDATE pg_storage.kanban.project SET archived=$2 WHERE id=$1
+UPDATE kanban.project SET archived=$2 WHERE id=$1
 `
 
 type ProjectArchiveParams struct {
@@ -26,7 +92,7 @@ func (q *Queries) ProjectArchive(ctx context.Context, arg ProjectArchiveParams) 
 }
 
 const ProjectCreate = `-- name: ProjectCreate :exec
-INSERT INTO pg_storage.kanban.project (id, name, description)
+INSERT INTO kanban.project (id, name, description)
 VALUES ($1, $2, $3)
 `
 
@@ -42,7 +108,7 @@ func (q *Queries) ProjectCreate(ctx context.Context, arg ProjectCreateParams) er
 }
 
 const ProjectList = `-- name: ProjectList :many
-SELECT id, name, description FROM pg_storage.kanban.project WHERE archived IS FALSE
+SELECT id, name, description FROM kanban.project WHERE archived IS FALSE
 `
 
 type ProjectListRow struct {
@@ -69,4 +135,33 @@ func (q *Queries) ProjectList(ctx context.Context) ([]*ProjectListRow, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const RenameList = `-- name: RenameList :exec
+UPDATE kanban.list SET name=$2 WHERE id=$1
+`
+
+type RenameListParams struct {
+	ID   pgtype.UUID `db:"id" json:"id"`
+	Name *string     `db:"name" json:"name"`
+}
+
+func (q *Queries) RenameList(ctx context.Context, arg RenameListParams) error {
+	_, err := q.db.Exec(ctx, RenameList, arg.ID, arg.Name)
+	return err
+}
+
+const SaveListOrder = `-- name: SaveListOrder :exec
+UPDATE kanban.list SET sort=$3 WHERE id=$1 AND project_id=$2
+`
+
+type SaveListOrderParams struct {
+	ID        pgtype.UUID `db:"id" json:"id"`
+	ProjectID pgtype.UUID `db:"project_id" json:"project_id"`
+	Sort      *int32      `db:"sort" json:"sort"`
+}
+
+func (q *Queries) SaveListOrder(ctx context.Context, arg SaveListOrderParams) error {
+	_, err := q.db.Exec(ctx, SaveListOrder, arg.ID, arg.ProjectID, arg.Sort)
+	return err
 }
