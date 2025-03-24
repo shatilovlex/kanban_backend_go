@@ -9,10 +9,10 @@ import (
 )
 
 type GetProjectListHandler struct {
-	appHandler *handler.Handler
+	appHandler handler.AppHandlerInterface
 }
 
-func NewProjectListHandler(appHandler *handler.Handler) *GetProjectListHandler {
+func NewProjectListHandler(appHandler handler.AppHandlerInterface) *GetProjectListHandler {
 	return &GetProjectListHandler{appHandler}
 }
 

@@ -13,10 +13,10 @@ import (
 )
 
 type CreateProjectHandler struct {
-	appHandler *handler.Handler
+	appHandler handler.AppHandlerInterface
 }
 
-func NewCreateProjectHandler(appHandler *handler.Handler) *CreateProjectHandler {
+func NewCreateProjectHandler(appHandler handler.AppHandlerInterface) *CreateProjectHandler {
 	return &CreateProjectHandler{appHandler}
 }
 
@@ -42,18 +42,19 @@ func (h *CreateProjectHandler) Handle(w http.ResponseWriter, r *http.Request) er
 		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 
-	err = h.appHandler.GetQuerier().ProjectCreate(h.appHandler.Context(), db.ProjectCreateParams{
+	projectCreateParams := db.ProjectCreateParams{
 		ID:          id,
 		Name:        &projectRequestParams.Name,
 		Description: &projectRequestParams.Description,
-	})
+	}
+	err = h.appHandler.GetQuerier().ProjectCreate(h.appHandler.Context(), projectCreateParams)
 	if err != nil {
 		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	err = json.NewEncoder(w).Encode(id)
+	err = json.NewEncoder(w).Encode(projectCreateParams)
 	if err != nil {
 		return apperror.WithHTTPStatus(err, http.StatusInternalServerError)
 	}
