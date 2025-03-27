@@ -11,30 +11,66 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const Board = `-- name: Board :many
-SELECT id, name, project_id, sort FROM kanban.list WHERE project_id=$1
+const BoardLists = `-- name: BoardLists :many
+SELECT id, name, project_id, sort FROM kanban.list WHERE project_id=$1 ORDER BY sort
 `
 
-type BoardRow struct {
+type BoardListsRow struct {
 	ID        pgtype.UUID `db:"id" json:"id"`
 	Name      *string     `db:"name" json:"name"`
 	ProjectID pgtype.UUID `db:"project_id" json:"project_id"`
 	Sort      *int32      `db:"sort" json:"sort"`
 }
 
-func (q *Queries) Board(ctx context.Context, projectID pgtype.UUID) ([]*BoardRow, error) {
-	rows, err := q.db.Query(ctx, Board, projectID)
+func (q *Queries) BoardLists(ctx context.Context, projectID pgtype.UUID) ([]*BoardListsRow, error) {
+	rows, err := q.db.Query(ctx, BoardLists, projectID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []*BoardRow{}
+	items := []*BoardListsRow{}
 	for rows.Next() {
-		var i BoardRow
+		var i BoardListsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
 			&i.ProjectID,
+			&i.Sort,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const BoardTasks = `-- name: BoardTasks :many
+SELECT id, title, description, sort FROM kanban.tasks WHERE list_id=$1 AND archived IS FALSE ORDER BY sort
+`
+
+type BoardTasksRow struct {
+	ID          pgtype.UUID `db:"id" json:"id"`
+	Title       *string     `db:"title" json:"title"`
+	Description *string     `db:"description" json:"description"`
+	Sort        *int32      `db:"sort" json:"sort"`
+}
+
+func (q *Queries) BoardTasks(ctx context.Context, listID pgtype.UUID) ([]*BoardTasksRow, error) {
+	rows, err := q.db.Query(ctx, BoardTasks, listID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*BoardTasksRow{}
+	for rows.Next() {
+		var i BoardTasksRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
 			&i.Sort,
 		); err != nil {
 			return nil, err
@@ -163,5 +199,65 @@ type SaveListOrderParams struct {
 
 func (q *Queries) SaveListOrder(ctx context.Context, arg SaveListOrderParams) error {
 	_, err := q.db.Exec(ctx, SaveListOrder, arg.ID, arg.ProjectID, arg.Sort)
+	return err
+}
+
+const TaskArchive = `-- name: TaskArchive :exec
+UPDATE kanban.tasks SET archived=$2 WHERE id=$1
+`
+
+type TaskArchiveParams struct {
+	ID       pgtype.UUID `db:"id" json:"id"`
+	Archived bool        `db:"archived" json:"archived"`
+}
+
+func (q *Queries) TaskArchive(ctx context.Context, arg TaskArchiveParams) error {
+	_, err := q.db.Exec(ctx, TaskArchive, arg.ID, arg.Archived)
+	return err
+}
+
+const TaskCreate = `-- name: TaskCreate :exec
+INSERT INTO kanban.tasks (id, list_id, title, description, sort) VALUES ($1, $2, $3, $4, $5)
+`
+
+type TaskCreateParams struct {
+	ID          pgtype.UUID `db:"id" json:"id"`
+	ListID      pgtype.UUID `db:"list_id" json:"list_id"`
+	Title       *string     `db:"title" json:"title"`
+	Description *string     `db:"description" json:"description"`
+	Sort        *int32      `db:"sort" json:"sort"`
+}
+
+func (q *Queries) TaskCreate(ctx context.Context, arg TaskCreateParams) error {
+	_, err := q.db.Exec(ctx, TaskCreate,
+		arg.ID,
+		arg.ListID,
+		arg.Title,
+		arg.Description,
+		arg.Sort,
+	)
+	return err
+}
+
+const TaskUpdate = `-- name: TaskUpdate :exec
+UPDATE kanban.tasks SET list_id=$2, title=$3, description=$4, sort=$5 WHERE id=$1
+`
+
+type TaskUpdateParams struct {
+	ID          pgtype.UUID `db:"id" json:"id"`
+	ListID      pgtype.UUID `db:"list_id" json:"list_id"`
+	Title       *string     `db:"title" json:"title"`
+	Description *string     `db:"description" json:"description"`
+	Sort        *int32      `db:"sort" json:"sort"`
+}
+
+func (q *Queries) TaskUpdate(ctx context.Context, arg TaskUpdateParams) error {
+	_, err := q.db.Exec(ctx, TaskUpdate,
+		arg.ID,
+		arg.ListID,
+		arg.Title,
+		arg.Description,
+		arg.Sort,
+	)
 	return err
 }

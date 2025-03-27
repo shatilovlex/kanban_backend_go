@@ -18,6 +18,7 @@ import (
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler/board"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler/list"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler/project"
+	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/handler/task"
 	"github.com/shatilovlex/kanban_backend_go/internal/infrastructure/server/app/muxmaker"
 	"github.com/shatilovlex/kanban_backend_go/pkg/pgconnect"
 )
@@ -69,6 +70,10 @@ func (a *App) Start() {
 		list.NewRenameListHandler(appHandler),
 
 		board.NewGetBoardHandler(appHandler),
+
+		task.NewCreateTaskHandler(appHandler),
+		task.NewUpdateTaskHandler(appHandler),
+		task.NewArchiveTaskHandler(appHandler),
 	}
 
 	maker := muxmaker.NewMakerAppMux(listHandlers)

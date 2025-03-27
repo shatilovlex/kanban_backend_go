@@ -19,9 +19,9 @@ type myQuerierMockObject struct {
 	mock.Mock
 }
 
-func (m *myQuerierMockObject) Board(ctx context.Context, projectID pgtype.UUID) ([]*db.BoardRow, error) {
+func (m *myQuerierMockObject) BoardLists(ctx context.Context, projectID pgtype.UUID) ([]*db.BoardListsRow, error) {
 	args := m.Called(ctx, projectID)
-	return args.Get(0).([]*db.BoardRow), args.Error(1)
+	return args.Get(0).([]*db.BoardListsRow), args.Error(1)
 }
 
 func TestHandler_getBoard(t *testing.T) {
@@ -36,7 +36,7 @@ func TestHandler_getBoard(t *testing.T) {
 	ctx := context.Background()
 	testObj := new(myQuerierMockObject)
 
-	testObj.On("Board", ctx, projectID).Return(make([]*db.BoardRow, 0), nil)
+	testObj.On("BoardLists", ctx, projectID).Return(make([]*db.BoardListsRow, 0), nil)
 
 	h := &GetBoardHandler{handler.NewHandlerMock(ctx, testObj)}
 	err := h.Handle(w, req)

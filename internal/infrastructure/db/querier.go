@@ -11,7 +11,8 @@ import (
 )
 
 type Querier interface {
-	Board(ctx context.Context, projectID pgtype.UUID) ([]*BoardRow, error)
+	BoardLists(ctx context.Context, projectID pgtype.UUID) ([]*BoardListsRow, error)
+	BoardTasks(ctx context.Context, listID pgtype.UUID) ([]*BoardTasksRow, error)
 	ListAdd(ctx context.Context, arg ListAddParams) error
 	ListRemove(ctx context.Context, id pgtype.UUID) error
 	ProjectArchive(ctx context.Context, arg ProjectArchiveParams) error
@@ -19,6 +20,9 @@ type Querier interface {
 	ProjectList(ctx context.Context) ([]*ProjectListRow, error)
 	RenameList(ctx context.Context, arg RenameListParams) error
 	SaveListOrder(ctx context.Context, arg SaveListOrderParams) error
+	TaskArchive(ctx context.Context, arg TaskArchiveParams) error
+	TaskCreate(ctx context.Context, arg TaskCreateParams) error
+	TaskUpdate(ctx context.Context, arg TaskUpdateParams) error
 }
 
 var _ Querier = (*Queries)(nil)
