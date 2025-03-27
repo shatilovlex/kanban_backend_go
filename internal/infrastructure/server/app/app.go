@@ -72,6 +72,7 @@ func (a *App) Start() {
 		board.NewGetBoardHandler(appHandler),
 
 		task.NewCreateTaskHandler(appHandler),
+		task.NewUpdateTaskHandler(appHandler),
 	}
 
 	maker := muxmaker.NewMakerAppMux(listHandlers)

@@ -188,3 +188,26 @@ func (q *Queries) TaskCreate(ctx context.Context, arg TaskCreateParams) error {
 	)
 	return err
 }
+
+const TaskUpdate = `-- name: TaskUpdate :exec
+UPDATE kanban.tasks SET list_id=$2, title=$3, description=$4, sort=$5 WHERE id=$1
+`
+
+type TaskUpdateParams struct {
+	ID          pgtype.UUID `db:"id" json:"id"`
+	ListID      pgtype.UUID `db:"list_id" json:"list_id"`
+	Title       *string     `db:"title" json:"title"`
+	Description *string     `db:"description" json:"description"`
+	Sort        *int32      `db:"sort" json:"sort"`
+}
+
+func (q *Queries) TaskUpdate(ctx context.Context, arg TaskUpdateParams) error {
+	_, err := q.db.Exec(ctx, TaskUpdate,
+		arg.ID,
+		arg.ListID,
+		arg.Title,
+		arg.Description,
+		arg.Sort,
+	)
+	return err
+}

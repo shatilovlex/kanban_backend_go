@@ -25,3 +25,6 @@ UPDATE kanban.list SET name=$2 WHERE id=$1;
 
 -- name: TaskCreate :exec
 INSERT INTO kanban.tasks (id, list_id, title, description, sort) VALUES ($1, $2, $3, $4, $5);
+
+-- name: TaskUpdate :exec
+UPDATE kanban.tasks SET list_id=$2, title=$3, description=$4, sort=$5 WHERE id=$1;
