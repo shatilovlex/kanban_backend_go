@@ -166,6 +166,20 @@ func (q *Queries) SaveListOrder(ctx context.Context, arg SaveListOrderParams) er
 	return err
 }
 
+const TaskArchive = `-- name: TaskArchive :exec
+UPDATE kanban.tasks SET archived=$2 WHERE id=$1
+`
+
+type TaskArchiveParams struct {
+	ID       pgtype.UUID `db:"id" json:"id"`
+	Archived bool        `db:"archived" json:"archived"`
+}
+
+func (q *Queries) TaskArchive(ctx context.Context, arg TaskArchiveParams) error {
+	_, err := q.db.Exec(ctx, TaskArchive, arg.ID, arg.Archived)
+	return err
+}
+
 const TaskCreate = `-- name: TaskCreate :exec
 INSERT INTO kanban.tasks (id, list_id, title, description, sort) VALUES ($1, $2, $3, $4, $5)
 `

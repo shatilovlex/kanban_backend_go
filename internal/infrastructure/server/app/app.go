@@ -73,6 +73,7 @@ func (a *App) Start() {
 
 		task.NewCreateTaskHandler(appHandler),
 		task.NewUpdateTaskHandler(appHandler),
+		task.NewArchiveTaskHandler(appHandler),
 	}
 
 	maker := muxmaker.NewMakerAppMux(listHandlers)
