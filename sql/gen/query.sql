@@ -8,8 +8,11 @@ UPDATE kanban.project SET archived=$2 WHERE id=$1;
 -- name: ProjectList :many
 SELECT id, name, description FROM kanban.project WHERE archived IS FALSE;
 
--- name: Board :many
-SELECT id, name, project_id, sort FROM kanban.list WHERE project_id=$1;
+-- name: BoardLists :many
+SELECT id, name, project_id, sort FROM kanban.list WHERE project_id=$1 ORDER BY sort;
+
+-- name: BoardTasks :many
+SELECT id, title, description, sort FROM kanban.tasks WHERE list_id=$1 AND archived IS FALSE ORDER BY sort;
 
 -- name: ListAdd :exec
 INSERT INTO kanban.list (id, project_id, name, sort) VALUES ($1, $2, $3, $4);

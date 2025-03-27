@@ -11,30 +11,66 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const Board = `-- name: Board :many
-SELECT id, name, project_id, sort FROM kanban.list WHERE project_id=$1
+const BoardLists = `-- name: BoardLists :many
+SELECT id, name, project_id, sort FROM kanban.list WHERE project_id=$1 ORDER BY sort
 `
 
-type BoardRow struct {
+type BoardListsRow struct {
 	ID        pgtype.UUID `db:"id" json:"id"`
 	Name      *string     `db:"name" json:"name"`
 	ProjectID pgtype.UUID `db:"project_id" json:"project_id"`
 	Sort      *int32      `db:"sort" json:"sort"`
 }
 
-func (q *Queries) Board(ctx context.Context, projectID pgtype.UUID) ([]*BoardRow, error) {
-	rows, err := q.db.Query(ctx, Board, projectID)
+func (q *Queries) BoardLists(ctx context.Context, projectID pgtype.UUID) ([]*BoardListsRow, error) {
+	rows, err := q.db.Query(ctx, BoardLists, projectID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []*BoardRow{}
+	items := []*BoardListsRow{}
 	for rows.Next() {
-		var i BoardRow
+		var i BoardListsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
 			&i.ProjectID,
+			&i.Sort,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const BoardTasks = `-- name: BoardTasks :many
+SELECT id, title, description, sort FROM kanban.tasks WHERE list_id=$1 AND archived IS FALSE ORDER BY sort
+`
+
+type BoardTasksRow struct {
+	ID          pgtype.UUID `db:"id" json:"id"`
+	Title       *string     `db:"title" json:"title"`
+	Description *string     `db:"description" json:"description"`
+	Sort        *int32      `db:"sort" json:"sort"`
+}
+
+func (q *Queries) BoardTasks(ctx context.Context, listID pgtype.UUID) ([]*BoardTasksRow, error) {
+	rows, err := q.db.Query(ctx, BoardTasks, listID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*BoardTasksRow{}
+	for rows.Next() {
+		var i BoardTasksRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
 			&i.Sort,
 		); err != nil {
 			return nil, err

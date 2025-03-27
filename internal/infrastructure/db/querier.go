@@ -11,7 +11,8 @@ import (
 )
 
 type Querier interface {
-	Board(ctx context.Context, projectID pgtype.UUID) ([]*BoardRow, error)
+	BoardLists(ctx context.Context, projectID pgtype.UUID) ([]*BoardListsRow, error)
+	BoardTasks(ctx context.Context, listID pgtype.UUID) ([]*BoardTasksRow, error)
 	ListAdd(ctx context.Context, arg ListAddParams) error
 	ListRemove(ctx context.Context, id pgtype.UUID) error
 	ProjectArchive(ctx context.Context, arg ProjectArchiveParams) error
