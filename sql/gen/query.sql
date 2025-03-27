@@ -22,3 +22,6 @@ UPDATE kanban.list SET sort=$3 WHERE id=$1 AND project_id=$2;
 
 -- name: RenameList :exec
 UPDATE kanban.list SET name=$2 WHERE id=$1;
+
+-- name: TaskCreate :exec
+INSERT INTO kanban.tasks (id, list_id, title, description, sort) VALUES ($1, $2, $3, $4, $5);

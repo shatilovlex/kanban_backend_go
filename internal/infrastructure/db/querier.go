@@ -19,6 +19,7 @@ type Querier interface {
 	ProjectList(ctx context.Context) ([]*ProjectListRow, error)
 	RenameList(ctx context.Context, arg RenameListParams) error
 	SaveListOrder(ctx context.Context, arg SaveListOrderParams) error
+	TaskCreate(ctx context.Context, arg TaskCreateParams) error
 }
 
 var _ Querier = (*Queries)(nil)

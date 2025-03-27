@@ -21,3 +21,12 @@ type KanbanProject struct {
 	Description *string     `db:"description" json:"description"`
 	Archived    bool        `db:"archived" json:"archived"`
 }
+
+type KanbanTask struct {
+	ID          pgtype.UUID `db:"id" json:"id"`
+	ListID      pgtype.UUID `db:"list_id" json:"list_id"`
+	Title       *string     `db:"title" json:"title"`
+	Description *string     `db:"description" json:"description"`
+	Sort        *int32      `db:"sort" json:"sort"`
+	Archived    bool        `db:"archived" json:"archived"`
+}

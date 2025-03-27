@@ -165,3 +165,26 @@ func (q *Queries) SaveListOrder(ctx context.Context, arg SaveListOrderParams) er
 	_, err := q.db.Exec(ctx, SaveListOrder, arg.ID, arg.ProjectID, arg.Sort)
 	return err
 }
+
+const TaskCreate = `-- name: TaskCreate :exec
+INSERT INTO kanban.tasks (id, list_id, title, description, sort) VALUES ($1, $2, $3, $4, $5)
+`
+
+type TaskCreateParams struct {
+	ID          pgtype.UUID `db:"id" json:"id"`
+	ListID      pgtype.UUID `db:"list_id" json:"list_id"`
+	Title       *string     `db:"title" json:"title"`
+	Description *string     `db:"description" json:"description"`
+	Sort        *int32      `db:"sort" json:"sort"`
+}
+
+func (q *Queries) TaskCreate(ctx context.Context, arg TaskCreateParams) error {
+	_, err := q.db.Exec(ctx, TaskCreate,
+		arg.ID,
+		arg.ListID,
+		arg.Title,
+		arg.Description,
+		arg.Sort,
+	)
+	return err
+}
