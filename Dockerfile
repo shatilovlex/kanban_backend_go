@@ -4,9 +4,11 @@ WORKDIR /app
 COPY go.mod .
 RUN go mod download
 COPY . .
+RUN cp -n .env.example .env
 RUN go build -o /bin/server ./cmd/server/main.go
-#run shop server in container
+#run server in container
 FROM alpine:latest
 COPY --from=builder /bin/server /bin/server
+COPY --from=builder /app/.env /bin/.env
 EXPOSE 8080
 CMD ["/bin/server"]
