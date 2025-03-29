@@ -8,6 +8,7 @@ RUN cp -n .env.example .env
 RUN go build -o /bin/server ./cmd/server/main.go
 #run server in container
 FROM alpine:latest
+WORKDIR /bin
 COPY --from=builder /bin/server /bin/server
 COPY --from=builder /app/.env /bin/.env
 EXPOSE 8080
